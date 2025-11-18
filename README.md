@@ -30,3 +30,4 @@ product-catalog-api/
 `npm start`
 
 GitHub repository:- https://github.com/rakshitha-dell/product-catalog-api.git
+Author Information:-Rakshitha
