@@ -29,4 +29,4 @@ product-catalog-api/
 `npm install`
 `npm start`
 
-GitHub repository:-
+GitHub repository:- https://github.com/rakshitha-dell/product-catalog-api.git
