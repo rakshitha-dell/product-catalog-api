@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product Catalog</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
+      h1 { color: #333; }
+      #products { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 12px; }
+      .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+      .name { font-weight: 700; }
+      .meta { font-size: 0.9em; color: #555; }
+      .price { margin-top: 8px; font-weight: 600; }
+      .in-stock { color: green; font-weight: 700; }
+      .out-stock { color: #c00; font-weight: 700; }
+      button { padding: 8px 12px; font-size: 1rem; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Product Catalog</h1>
+    <p>
+      <button id="loadAll">Load All Products</button>
+      <button id="loadInStock">Load In-Stock Only</button>
+      <button id="loadCategories">Show Categories</button>
+    </p>
+
+    <div id="message"></div>
+    <div id="products"></div>
+
+    <script>
+      const productsContainer = document.getElementById('products');
+      const message = document.getElementById('message');
+
+      function showMessage(text) {
+        message.textContent = text;
+        setTimeout(() => { message.textContent = ''; }, 2500);
+      }
+
+      function renderProducts(items) {
+        productsContainer.innerHTML = '';
+        if (!items || items.length === 0) {
+          productsContainer.innerHTML = '<p>No products to display.</p>';
+          return;
+        }
+
+        items.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'card';
+
+          div.innerHTML = `
+            <div class="name">${escapeHtml(p.name)}</div>
+            <div class="meta">Category: ${escapeHtml(p.category)}</div>
+            <div class="price">Price: ₹${Number(p.price).toLocaleString()}</div>
+            <div class="meta">Status: <span class="${p.inStock ? 'in-stock' : 'out-stock'}">${p.inStock ? 'In Stock' : 'Out of Stock'}</span></div>
+          `;
+
+          productsContainer.appendChild(div);
+        });
+      }
+
+      function escapeHtml(s) {
+        if (typeof s !== 'string') return s;
+        return s.replace(/[&<>\"']/g, function(ch) {
+          return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[ch];
+        });
+      }
+
+      async function fetchProducts(path = '/products') {
+        try {
+          showMessage('Loading...');
+          const res = await fetch(path);
+          if (!res.ok) throw new Error('Network response was not ok');
+          const data = await res.json();
+
+          if (path.endsWith('/categories')) {
+            if (data && Array.isArray(data.categories)) {
+              renderCategories(data.categories);
+            } else {
+              productsContainer.innerHTML = '<p>No categories found.</p>';
+            }
+            showMessage('Categories loaded');
+            return;
+          }
+
+          renderProducts(data);
+          showMessage('Products loaded');
+        } catch (err) {
+          console.error(err);
+          productsContainer.innerHTML = '<p>Error loading data. Open the console for details.</p>';
+          showMessage('Error fetching data');
+        }
+      }
+
+      function renderCategories(list) {
+        productsContainer.innerHTML = '';
+        const ul = document.createElement('ul');
+        list.forEach(c => {
+          const li = document.createElement('li');
+          li.textContent = c;
+          ul.appendChild(li);
+        });
+        productsContainer.appendChild(ul);
+      }
+
+      document.getElementById('loadAll').addEventListener('click', () => fetchProducts('/products'));
+      document.getElementById('loadInStock').addEventListener('click', () => fetchProducts('/products/instock'));
+      document.getElementById('loadCategories').addEventListener('click', () => fetchProducts('/products/categories'));
+    </script>
+  </body>
+</html>
